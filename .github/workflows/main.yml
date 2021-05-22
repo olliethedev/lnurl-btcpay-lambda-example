@@ -18,9 +18,9 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-       - uses: c-hive/gha-npm-cache@v1
+      - uses: c-hive/gha-npm-cache@v1
 
-       - name: Install JS dependencies
-          run: npm install serverless
-       - name: Deploy
-          run: serverless config credentials --provider aws --key ${{ secrets.AWS_ACCESS_KEY_ID }} --secret ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Install JS dependencies
+        run: npm install serverless
+      - name: Deploy
+        run: serverless config credentials --provider aws --key ${{ secrets.AWS_ACCESS_KEY_ID }} --secret ${{ secrets.AWS_SECRET_ACCESS_KEY }}
