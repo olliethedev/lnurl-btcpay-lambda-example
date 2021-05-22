@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> 5a1f2b3371ba2d59befbe1db892d406512f67e84
 name: Build and deploy Lambda
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
