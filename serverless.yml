@@ -1,20 +1,24 @@
 service: lnurl-btcpay-lambda-example
 
 frameworkVersion: '2'
+useDotenv: true
 
 plugins:
   - serverless-offline
+  - serverless-dotenv-plugin
 
 provider:
   name: aws
   runtime: nodejs12.x
   lambdaHashingVersion: '20201221'
+  environment:
+    MONGO_DB_URL: ${env:MONGO_DB_URL}
+    SESSION_SECRET: ${env:SESSION_SECRET}
 
 functions:
   hello:
     handler: handler.hello
     events:
-      - http:
-          path: /
-          method: get
+      - http: ANY /
+      - http: 'ANY {proxy+}'
 
