@@ -38,9 +38,9 @@ app.get("/login-lnurl/callback", async (req, res) => {
     res.status(200).json({ status: "OK" });
   } catch (error) {
     console.trace(error);
-    res.status(error?.status ?? 500).json({
+    res.status(error.status ? error.status: 500).json({
       status: "ERROR",
-      reason: error?.message ?? "Unexpected error",
+      reason: error.message ? error.message : "Unexpected error",
     });
   }
 });
