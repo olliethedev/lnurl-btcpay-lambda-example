@@ -2,6 +2,8 @@ service: lnurl-btcpay-lambda-example
 
 frameworkVersion: '2'
 
+plugins:
+  - serverless-offline
 
 provider:
   name: aws
@@ -15,3 +17,4 @@ functions:
       - http:
           path: /
           method: get
+
