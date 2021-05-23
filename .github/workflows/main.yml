@@ -23,6 +23,7 @@ jobs:
         touch .env
         echo "MONGO_DB_URL=${{ secrets.MONGO_DB_URL }}" >> .env
         echo "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" >> .env
+        echo "PUBLIC_URL=${{ secrets.PUBLIC_URL }}" >> .env
         cat .env
     - run: npm ci
     - name: serverless deploy
