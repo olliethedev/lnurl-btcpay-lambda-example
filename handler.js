@@ -17,7 +17,7 @@ app.use(mongoMiddleware)
 
 app.get('/foo', function (req, res, next) {
   req.session.views = req.session.views ? req.session.views + 1 : 1;
-  res.status(200).json({ name: 'John Doe', views: req.session.views})
+  res.status(200).json({ loggedin: req.session.lnurlAuth.linkingPublicKey ? true : false, views: req.session.views})
 })
 
 app.get(
