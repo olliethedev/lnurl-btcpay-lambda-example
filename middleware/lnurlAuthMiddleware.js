@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const querystring = require("querystring");
 const lnurl = require("lnurl");
 
-module.exports =  function (options) {
+module.exports = function (options) {
   if (!options.callbackUrl) {
     throw new Error('Missing required middleware option: "callbackUrl"');
   }

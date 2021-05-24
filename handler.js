@@ -3,14 +3,10 @@ const serverless = require('serverless-http');
 const express = require('express')
 const app = express()
 
-const { verifyAuthorizationSignature } = require('lnurl/lib');
-
-
 const sessionMiddleware = require("./middleware/sessionMiddleware");
 const mongoMiddleware = require("./middleware/mongoMiddleware");
-const lnurlMiddleware = require("./middleware/lnurlMiddleware");
-const { findSession, updateSession } = require('./helpers/sessionHelper');
-
+const lnurlMiddleware = require("./middleware/lnurlAuthMiddleware");
+const lnurlAuthCallbackMiddleware = require('./middleware/lnurlAuthCallbackMiddleware');
 
 app.use(mongoMiddleware)
   .use(sessionMiddleware);
@@ -28,21 +24,6 @@ app.get(
   })
 );
 
-app.get("/login-lnurl/callback", async (req, res) => {
-  try {
-    const { k1, sig, key } = req.query;
-    if (!verifyAuthorizationSignature(sig, k1, key)) {
-      throw new Error("Invalid signature", 400);
-    }
-    await updateSession("session.lnurlAuth.k1", k1, "session.lnurlAuth.linkingPublicKey", key);
-    res.status(200).json({ status: "OK" });
-  } catch (error) {
-    console.trace(error);
-    res.status(error.status ? error.status: 500).json({
-      status: "ERROR",
-      reason: error.message ? error.message : "Unexpected error",
-    });
-  }
-});
+app.get("/login-lnurl/callback", lnurlAuthCallbackMiddleware);
 
 module.exports.hello = serverless(app);
