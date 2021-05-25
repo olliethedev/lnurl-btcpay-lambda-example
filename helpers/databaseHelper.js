@@ -6,13 +6,11 @@ module.exports.connect = async function (databaseUrl) {
         return connection;
     }
     try {
-      console.log("creating connection");
       const connectionSettings = {
         useNewUrlParser: true,
         useUnifiedTopology: true,
       };
       connection = await mongoose.createConnection(databaseUrl, connectionSettings);
-      console.log("connected!");
       return connection;
     } catch (e) {
       console.error("Could not connect to MongoDB...");

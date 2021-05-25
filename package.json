@@ -27,7 +27,9 @@
     "debug": "4.3.1",
     "express": "^4.17.1",
     "express-session": "^1.17.2",
-    "lnurl": "^0.16.1",
+    "ln-service": "50.11.10",
+    "lnurl": "0.16.1",
+    "long": "^4.0.0",
     "mongoose": "^5.12.10",
     "serverless-http": "^2.7.0"
   }
