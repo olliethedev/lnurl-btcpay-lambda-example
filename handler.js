@@ -10,6 +10,7 @@ const sessionMiddleware = require("./middleware/sessionMiddleware");
 const mongoMiddleware = require("./middleware/mongoMiddleware");
 const lnurlMiddleware = require("./middleware/lnurlAuthMiddleware");
 const lnurlPayMiddleware = require('./middleware/lnurlPayMiddleware');
+const lnurlWithdrawMiddleware = require('./middleware/lnurlWithdrawMiddleware');
 
 const app = express()
 
@@ -57,8 +58,18 @@ app.get("/pay-lnurl/pay-info/:linkingPublicKey", new lnurlPayMiddleware.info({
 
 app.get("/pay-lnurl/callback/:linkingPublicKey", lnurlPayMiddleware.callback);
 
-
 app.get("/node/invoice/:invoiceId", lnurlPayMiddleware.invoice);
+
+// Withdraw
+app.get("/withdraw-lnurl/withdraw", new lnurlWithdrawMiddleware.withdrawUrl({
+  callbackUrl: `${process.env.PUBLIC_URL}/withdraw-lnurl/withdraw-info`,
+}))
+
+app.get("/withdraw-lnurl/withdraw-info", new lnurlWithdrawMiddleware.info({
+  callbackUrl: `${process.env.PUBLIC_URL}/withdraw-lnurl/callback`,
+}))
+
+app.get("/withdraw-lnurl/callback", lnurlWithdrawMiddleware.callback);
 
 // Misc
 app.get("/node/ping", async function(req, res) {
