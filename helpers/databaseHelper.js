@@ -17,3 +17,7 @@ module.exports.connect = async function (databaseUrl) {
       throw e;
     }
   };
+
+module.exports.getConnection = function () {
+  return connection;
+};

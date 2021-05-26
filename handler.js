@@ -9,13 +9,12 @@ const app = express()
 const sessionMiddleware = require("./middleware/sessionMiddleware");
 const mongoMiddleware = require("./middleware/mongoMiddleware");
 const lnurlMiddleware = require("./middleware/lnurlAuthMiddleware");
-const lnurlAuthCallbackMiddleware = require('./middleware/lnurlAuthCallbackMiddleware');
 const lnurlPayMiddleware = require('./middleware/lnurlPayMiddleware');
 
 app.use(mongoMiddleware)
   .use(sessionMiddleware);
 
-app.get('/foo', function (req, res, next) {
+app.get('/account', function (req, res, next) {
   req.session.views = req.session.views ? req.session.views + 1 : 1;
   res.status(200).json({ loggedin: req.session.lnurlAuth.linkingPublicKey ? true : false, views: req.session.views})
 })
@@ -23,26 +22,26 @@ app.get('/foo', function (req, res, next) {
 // Authentication
 app.get(
   "/login-lnurl/login",
-  new lnurlMiddleware({
+  new lnurlMiddleware.info({
     callbackUrl: `${process.env.PUBLIC_URL}/login-lnurl/callback`,
   })
 );
 
-app.get("/login-lnurl/callback", lnurlAuthCallbackMiddleware);
+app.get("/login-lnurl/callback", lnurlMiddleware.callback);
 
 
 // Payment
 app.get("/pay-lnurl/pay", new lnurlPayMiddleware.payUrl({
-    callbackUrl: `${process.env.PUBLIC_URL}/pay-lnurl/pay-info`,
+    callbackUrl: `${process.env.PUBLIC_URL}/pay-lnurl/pay-info/:linkingPublicKey`,
   })
 );
 
-app.get("/pay-lnurl/pay-info", new lnurlPayMiddleware.info({
-    callbackUrl: `${process.env.PUBLIC_URL}/pay-lnurl/callback`
+app.get("/pay-lnurl/pay-info/:linkingPublicKey", new lnurlPayMiddleware.info({
+    callbackUrl: `${process.env.PUBLIC_URL}/pay-lnurl/callback/:linkingPublicKey`
   })
 );
 
-app.get("/pay-lnurl/callback", lnurlPayMiddleware.callback);
+app.get("/pay-lnurl/callback/:linkingPublicKey", lnurlPayMiddleware.callback);
 
 // Health
 app.get("/node/ping", async function(req, res) {
