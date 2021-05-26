@@ -36,7 +36,7 @@ module.exports.info = function(options){
         console.log(secret);
         const {account, claim} = await findClaimAndAccount(secret);
         console.log({ account, claim});
-        if( !claim ) { // todo: or status is paid
+        if( !claim || claim.state !== "OPEN" ) { 
             throw new Error('Withdrawal already paid out');
         }
         const fullCallbackUrl = `${options.callbackUrl}?${querystring.stringify({
