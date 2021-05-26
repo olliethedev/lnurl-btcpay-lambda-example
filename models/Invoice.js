@@ -5,7 +5,11 @@ const { getConnection } = require("../helpers/databaseHelper");
 const conn = getConnection();
 
 const invoiceSchema = new mongoose.Schema({
-    rawInvoice: { 
+    invoiceId: {
+        type: String,
+        required: true
+    },
+    invoiceRequest: { 
         type: String,
         required: true
     },
@@ -20,10 +24,17 @@ const invoiceSchema = new mongoose.Schema({
         default: "OPEN",
         required: true
     },
-    amount: {
+    amountInvoiced: {
         type: Number,
         required: true
+    },
+    amountReceived: { 
+        type: Number,
+        default: 0,
     }
+},
+{
+    timestamps: true
 });
 
 module.exports = conn.model('Invoice', invoiceSchema);

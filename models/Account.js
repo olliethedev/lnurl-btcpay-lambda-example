@@ -14,6 +14,9 @@ const accountSchema = new mongoose.Schema({
         default: 0,
         required: true
     }
+},
+{
+    timestamps: true
 });
 
 module.exports = conn.model('Account', accountSchema);

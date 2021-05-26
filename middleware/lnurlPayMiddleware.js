@@ -1,8 +1,6 @@
 const lnurl = require("lnurl");
 const querystring = require("querystring");
-const crypto = require("crypto");
-const lnService = require('ln-service');
-const lnd = require('../lnd');
+const { createInvoiceAndSyncDB, getLndInvoiceAndSyncDB } = require("../helpers/invoiceHelper");
 
 const invoiceMessage = "Fund your account";
 
@@ -47,8 +45,8 @@ module.exports.info = function(options){
         const fullCallbackUrl = options.callbackUrl.replace(":linkingPublicKey", linkingPublicKey);
         const payPayload = { 
             callback: fullCallbackUrl,
-            minSendable:4000,
-            maxSendable:4000,
+            minSendable:1000,
+            maxSendable:1000000,
             metadata: responseMetadata,
             tag: "payRequest",
         }
@@ -62,33 +60,29 @@ module.exports.callback = async function(req, res){
     const amount = Number.parseInt(amountRaw, 10);
     const tokens = amount / 1000;
     const description = invoiceMessage;
-    const description_hash = crypto.createHash("sha256").update(responseMetadata).digest();
     
-    const AccountModel = require("../models/Account");
-    const account = await AccountModel.findOne({ linkingPublicKey });
-    console.log(account);
-
-    const lnInvoice = await lnService.createInvoice({
-        lnd,
-        tokens,
-        description,
-        description_hash,
-      });
-    console.log(lnInvoice);
-
-    const invoiceModel = require("../models/Invoice");
-    const invoice = new invoiceModel({
-        rawInvoice: lnInvoice.request,
-        account,
-        amount: tokens
-    });
-    await invoice.save();
+    const request = await createInvoiceAndSyncDB(linkingPublicKey, tokens, description, responseMetadata);
+    
     res.status(200).json({
-        pr: lnInvoice.request,
+        pr: request,
         successAction: {
             tag: 'message',
-            message: 'Thank you for paying me!!!'
+            message: 'Funds added to your account'
          },
         disposable: true,
+    });
+}
+
+module.exports.invoice = async function(req, res){
+    const { invoiceId } = req.params;
+    if( !invoiceId ) {
+        throw new Error("Missing invoice id");
+    }
+    
+    const {invoice,account} = await getLndInvoiceAndSyncDB(invoiceId);
+    
+    res.status(200).json({
+        invoice,
+        account
     });
 }

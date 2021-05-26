@@ -6,6 +6,15 @@ module.exports.findSession = async function(key, value){
     return sessions.findOne({[key]:value});
 }
 
+module.exports.findAccountForSession = async function(session){
+    const linkingPublicKey = session.lnurlAuth ? session.lnurlAuth.linkingPublicKey: false;
+    if(!linkingPublicKey){
+        return null;
+    }
+    const AccountModel = require("../models/Account");
+    return AccountModel.findOne({ linkingPublicKey });
+}
+
 module.exports.updateSession = async function(findKey, findValue, setKey, setValue){
     const connection = await connect(process.env.MONGO_DB_URL);
     let sessions = connection.collection('sessions');
