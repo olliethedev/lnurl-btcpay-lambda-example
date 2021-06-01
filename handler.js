@@ -13,6 +13,7 @@ const lnurlMiddleware = require("./middleware/lnurlAuthMiddleware");
 const lnurlPayMiddleware = require('./middleware/lnurlPayMiddleware');
 const lnurlWithdrawMiddleware = require('./middleware/lnurlWithdrawMiddleware');
 const { disconnect } = require('./helpers/databaseHelper');
+const { getAllLndInvoicesAndSyncDB } = require('./helpers/invoiceHelper');
 
 const app = express()
 
@@ -40,11 +41,18 @@ app.get("/login-lnurl/callback", lnurlMiddleware.callback);
 // Account
 app.get('/account', async function (req, res, next) {
   const linkingPublicKey = req.session.lnurlAuth ? req.session.lnurlAuth.linkingPublicKey: false;
-  const account = await findAccountForSession(req.session);
-  res.status(200).json({ 
-    loggedin: linkingPublicKey ? true : false, 
-    account
-  });
+  try{
+    const account = await findAccountForSession(req.session);
+    const invoices = await getAllLndInvoicesAndSyncDB(account);
+    res.status(200).json({ 
+      loggedin: linkingPublicKey ? true : false, 
+      account,
+      invoices
+    });
+
+  }catch(ex){
+    res.status(200).json({ loggedin: flase });
+  }
   next();
 })
 

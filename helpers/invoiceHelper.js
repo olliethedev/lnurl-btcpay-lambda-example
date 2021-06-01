@@ -121,3 +121,37 @@ module.exports.payInvoiceAndSyncDB = async function( secret, pr ) {
     });
     return {account, claim};
 }
+
+module.exports.getAllLndInvoicesAndSyncDB = async function(account){
+    if(!account) return [];
+    const invoiceModel = require("../models/Invoice");
+    const conn = getConnection();
+    const dbSession = await conn.startSession();
+
+    let invoices;
+
+    await dbSession.withTransaction(async () => {
+        invoices = await invoiceModel.find({account}).sort({updatedAt:-1}).session(dbSession);
+        for(let i = 0; i < invoices.length; i++){
+            let invoice = invoices[i];
+            if(invoice.state !== "SETTLED"){
+                const invoiceDetails = await lnService.getInvoice({id:invoice.invoiceId, lnd});
+                if(invoice.state === "OPEN" && invoiceDetails.is_confirmed){
+                    invoice.state = "SETTLED";
+                    invoice.amountReceived = invoiceDetails.received;
+                    account.balance += invoiceDetails.received;
+                    await invoice.save();
+                }else if(invoice.state === "OPEN" && invoiceDetails.is_canceled){
+                    invoice.state = "CANCELED";
+                    await invoice.save();
+                }
+            }
+        }
+
+        await account.save();
+    });
+
+    dbSession.endSession();
+
+    return invoices;
+}
