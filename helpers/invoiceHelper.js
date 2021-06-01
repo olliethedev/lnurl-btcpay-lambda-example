@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const lnService = require('ln-service');
 const lnd = require('../lnd');
-const { getConnection } = require("./databaseHelper");
+const { getConnection, connect } = require("./databaseHelper");
 
 module.exports.createInvoiceAndSyncDB = async function ( linkingPublicKey, amountInvoiced, description, responseMetadata){
     const description_hash = crypto.createHash("sha256").update(responseMetadata).digest();
@@ -154,4 +154,9 @@ module.exports.getAllLndInvoicesAndSyncDB = async function(account){
     dbSession.endSession();
 
     return invoices;
+}
+
+module.exports.getAllClaims = async function(account){
+    const claimModel = require("../models/Claim");
+    return claimModel.find({account}).sort({updatedAt:-1});
 }

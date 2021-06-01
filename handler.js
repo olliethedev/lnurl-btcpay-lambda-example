@@ -13,7 +13,7 @@ const lnurlMiddleware = require("./middleware/lnurlAuthMiddleware");
 const lnurlPayMiddleware = require('./middleware/lnurlPayMiddleware');
 const lnurlWithdrawMiddleware = require('./middleware/lnurlWithdrawMiddleware');
 const { disconnect } = require('./helpers/databaseHelper');
-const { getAllLndInvoicesAndSyncDB } = require('./helpers/invoiceHelper');
+const { getAllLndInvoicesAndSyncDB, getAllClaims } = require('./helpers/invoiceHelper');
 
 const app = express()
 
@@ -44,10 +44,12 @@ app.get('/account', async function (req, res, next) {
   try{
     const account = await findAccountForSession(req.session);
     const invoices = await getAllLndInvoicesAndSyncDB(account);
+    const claims = await getAllClaims(account);
     res.status(200).json({ 
       loggedin: linkingPublicKey ? true : false, 
       account,
-      invoices
+      invoices,
+      claims
     });
 
   }catch(ex){
