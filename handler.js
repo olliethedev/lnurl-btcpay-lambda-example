@@ -51,7 +51,7 @@ app.get('/account', async function (req, res, next) {
     });
 
   }catch(ex){
-    res.status(200).json({ loggedin: flase });
+    res.status(200).json({ loggedin: false });
   }
   next();
 })
