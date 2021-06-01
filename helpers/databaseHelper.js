@@ -21,3 +21,8 @@ module.exports.connect = async function (databaseUrl) {
 module.exports.getConnection = function () {
   return connection;
 };
+
+module.exports.disconnect = async function () {
+  await mongoose.disconnect();
+  connection = null;
+}

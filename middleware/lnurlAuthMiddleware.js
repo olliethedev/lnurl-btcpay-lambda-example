@@ -43,7 +43,6 @@ module.exports.callback = async (req, res) => {
       const AccountModel = require("../models/Account");
       await AccountModel.findOneAndUpdate(
         {linkingPublicKey: key},
-        {linkingPublicKey: key},
         {upsert: true, setDefaultsOnInsert: true}
       )
       res.status(200).json({ status: "OK" });

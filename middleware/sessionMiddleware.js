@@ -6,6 +6,10 @@ module.exports = function sessionMiddleware(req, res, next) {
     secret: process.env.SESSION_SECRET,
     saveUninitialized: false,
     resave: false,
+    cookie: {
+      secure: true,
+      sameSite: 'none',
+    },
     store: MongoStore.create({
       client: req.dbClient,
       stringify: false,
