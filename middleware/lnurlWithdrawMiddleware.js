@@ -11,7 +11,7 @@ module.exports.withdrawUrl = function(options){
         if(!req.session.lnurlAuth || !req.session.lnurlAuth.linkingPublicKey){
             throw new Error('Please login first'); 
         }
-        const claim = await createPaymentClaimAndSyncDB(req.session.lnurlAuth.linkingPublicKey);
+        const claim = await createPaymentClaimAndSyncDB(req.session.lnurlAuth.linkingPublicKey, req.models.account, req.models.claim);
         return res.status(200).send({ url: getWithdrawUrl(options, claim.secret) });  
     }
 }
@@ -34,7 +34,7 @@ module.exports.info = function(options){
     return async function(req, res){
         const { secret } = req.query;
         console.log(secret);
-        const {account, claim} = await findClaimAndAccount(secret);
+        const {account, claim} = await findClaimAndAccount(secret, req.models.account, req.models.claim);
         console.log({ account, claim});
         if( !claim || claim.state !== "OPEN" ) { 
             throw new Error('Withdrawal already paid out');
@@ -56,7 +56,7 @@ module.exports.info = function(options){
 module.exports.callback = async function(req, res){
     console.log(req.query);
     const {k1, pr} = req.query;
-    const { account, claim } = await payInvoiceAndSyncDB(k1, pr); // todo: check if this call is too slow for AWS lambda. consider breaking up like the funding flow
+    const { account, claim } = await payInvoiceAndSyncDB(k1, pr, req.models.account, req.models.claim); // todo: check if this call is too slow for AWS lambda. consider breaking up like the funding flow
     console.log({account, claim});
     res.status(200).json({status: "OK"});
 }

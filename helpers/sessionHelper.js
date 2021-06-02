@@ -6,13 +6,12 @@ module.exports.findSession = async function(key, value){
     return sessions.findOne({[key]:value});
 }
 
-module.exports.findAccountForSession = async function(session){
+module.exports.findAccountForSession = async function(session, accountModel){
     const linkingPublicKey = session.lnurlAuth ? session.lnurlAuth.linkingPublicKey: false;
     if(!linkingPublicKey){
         return null;
     }
-    const AccountModel = require("../models/Account");
-    return AccountModel.findOne({ linkingPublicKey });
+    return accountModel.findOne({ linkingPublicKey });
 }
 
 module.exports.updateSession = async function(findKey, findValue, setKey, setValue){

@@ -42,9 +42,9 @@ app.get("/login-lnurl/callback", lnurlMiddleware.callback);
 app.get('/account', async function (req, res, next) {
   const linkingPublicKey = req.session.lnurlAuth ? req.session.lnurlAuth.linkingPublicKey: false;
   try{
-    const account = await findAccountForSession(req.session);
-    const invoices = await getAllLndInvoicesAndSyncDB(account);
-    const claims = await getAllClaims(account);
+    const account = await findAccountForSession(req.session, req.models.account);
+    const invoices = await getAllLndInvoicesAndSyncDB(account, req.models.invoice);
+    const claims = await getAllClaims(account, req.models.claim);
     res.status(200).json({ 
       loggedin: linkingPublicKey ? true : false, 
       account,

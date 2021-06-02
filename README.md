@@ -45,7 +45,7 @@ serverless invoke local --function hello
 Alternatively, it is also possible to emulate API Gateway and Lambda locally by using `serverless-offline` plugin. In order to do that, execute the following command:
 
 ```
-serverless offline
+serverless offline --useChildProcesses
 ```
 
 ### Local Invocation

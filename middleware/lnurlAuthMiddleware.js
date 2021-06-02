@@ -40,7 +40,7 @@ module.exports.callback = async (req, res) => {
         throw new Error("Invalid signature", 400);
       }
       await updateSession("session.lnurlAuth.k1", k1, "session.lnurlAuth.linkingPublicKey", key);
-      const AccountModel = require("../models/Account");
+      const AccountModel = req.models.account;
       await AccountModel.findOneAndUpdate(
         {linkingPublicKey: key},
         {upsert: true, setDefaultsOnInsert: true}

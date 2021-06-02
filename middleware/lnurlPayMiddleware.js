@@ -61,7 +61,7 @@ module.exports.callback = async function(req, res){
     const tokens = amount / 1000;
     const description = invoiceMessage;
     
-    const request = await createInvoiceAndSyncDB(linkingPublicKey, tokens, description, responseMetadata);
+    const request = await createInvoiceAndSyncDB(linkingPublicKey, tokens, description, responseMetadata, req.models.account, req.models.invoice);
     
     res.status(200).json({
         pr: request,
@@ -79,7 +79,7 @@ module.exports.invoice = async function(req, res){
         throw new Error("Missing invoice id");
     }
     
-    const {invoice,account} = await getLndInvoiceAndSyncDB(invoiceId);
+    const {invoice,account} = await getLndInvoiceAndSyncDB(invoiceId, req.models.account, req.models.invoice);
     
     res.status(200).json({
         invoice,

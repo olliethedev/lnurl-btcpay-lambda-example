@@ -3,9 +3,8 @@ const lnService = require('ln-service');
 const lnd = require('../lnd');
 const { getConnection, connect } = require("./databaseHelper");
 
-module.exports.createInvoiceAndSyncDB = async function ( linkingPublicKey, amountInvoiced, description, responseMetadata){
+module.exports.createInvoiceAndSyncDB = async function ( linkingPublicKey, amountInvoiced, description, responseMetadata, accountModel, invoiceModel){
     const description_hash = crypto.createHash("sha256").update(responseMetadata).digest();
-    const accountModel = require("../models/Account");
     const account = await accountModel.findOne({ linkingPublicKey });
     console.log(account);
 
@@ -17,7 +16,6 @@ module.exports.createInvoiceAndSyncDB = async function ( linkingPublicKey, amoun
       });
     console.log(lnInvoice);
 
-    const invoiceModel = require("../models/Invoice");
     const invoice = new invoiceModel({
         invoiceId : lnInvoice.id,
         invoiceRequest: lnInvoice.request,
@@ -28,9 +26,7 @@ module.exports.createInvoiceAndSyncDB = async function ( linkingPublicKey, amoun
     return lnInvoice.request;
 }
 
-module.exports.getLndInvoiceAndSyncDB = async function( invoiceId ){
-    const invoiceModel = require("../models/Invoice");
-    const accountModel = require("../models/Account");
+module.exports.getLndInvoiceAndSyncDB = async function( invoiceId, accountModel, invoiceModel ){
     const conn = getConnection();
     const dbSession = await conn.startSession();
 
@@ -60,9 +56,7 @@ module.exports.getLndInvoiceAndSyncDB = async function( invoiceId ){
     return { invoice, account};
 }
 
-module.exports.createPaymentClaimAndSyncDB = async function (linkingPublicKey) {
-    const claimModel = require("../models/Claim");
-    const accountModel = require("../models/Account");
+module.exports.createPaymentClaimAndSyncDB = async function (linkingPublicKey, accountModel, claimModel) {
     const account = await accountModel.findOne({ linkingPublicKey });
     console.log(account);
     const oldClaim = await claimModel.findOne({account, state:"OPEN"});
@@ -78,9 +72,7 @@ module.exports.createPaymentClaimAndSyncDB = async function (linkingPublicKey) {
     return claim.save();
 }
 
-module.exports.findClaimAndAccount = async function (secret) {
-    const claimModel = require("../models/Claim");
-    const accountModel = require("../models/Account");
+module.exports.findClaimAndAccount = async function (secret, accountModel, claimModel) {
     const claim = await claimModel.findOne({secret});
     if(claim.state !== "OPEN"){
         throw new Error("Already paid or canceled this claim");
@@ -89,9 +81,7 @@ module.exports.findClaimAndAccount = async function (secret) {
     return {account, claim};
 }
 
-module.exports.payInvoiceAndSyncDB = async function( secret, pr ) {
-    const claimModel = require("../models/Claim");
-    const accountModel = require("../models/Account");
+module.exports.payInvoiceAndSyncDB = async function( secret, pr, accountModel, claimModel ) {
     const conn = getConnection();
     const dbSession = await conn.startSession();
 
@@ -122,9 +112,8 @@ module.exports.payInvoiceAndSyncDB = async function( secret, pr ) {
     return {account, claim};
 }
 
-module.exports.getAllLndInvoicesAndSyncDB = async function(account){
+module.exports.getAllLndInvoicesAndSyncDB = async function(account, invoiceModel){
     if(!account) return [];
-    const invoiceModel = require("../models/Invoice");
     const conn = getConnection();
     const dbSession = await conn.startSession();
 
@@ -156,7 +145,6 @@ module.exports.getAllLndInvoicesAndSyncDB = async function(account){
     return invoices;
 }
 
-module.exports.getAllClaims = async function(account){
-    const claimModel = require("../models/Claim");
+module.exports.getAllClaims = async function(account, claimModel){
     return claimModel.find({account}).sort({updatedAt:-1});
 }
