@@ -61,3 +61,10 @@ curl http://localhost:3000/dev/
   "message": "Go Serverless v2.0! Your function executed successfully!",
 }
 ```
+
+
+### ngrok
+
+```bash
+ngrok http 3000
+```

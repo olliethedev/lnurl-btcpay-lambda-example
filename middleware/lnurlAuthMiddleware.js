@@ -39,12 +39,15 @@ module.exports.callback = async (req, res) => {
       if (!verifyAuthorizationSignature(sig, k1, key)) {
         throw new Error("Invalid signature", 400);
       }
+      console.log({k1, key});
       await updateSession("session.lnurlAuth.k1", k1, "session.lnurlAuth.linkingPublicKey", key);
       const AccountModel = req.models.account;
-      await AccountModel.findOneAndUpdate(
+      const update = await AccountModel.updateOne(
         {linkingPublicKey: key},
-        {upsert: true, setDefaultsOnInsert: true}
-      )
+        {$set:{linkingPublicKey: key}},
+        {upsert: true, setDefaultsOnInsert: true, new: true}
+      ); // creates an account if not exists already, or updates updatedAt field on model
+      console.log(update);
       res.status(200).json({ status: "OK" });
     } catch (error) {
       console.trace(error);

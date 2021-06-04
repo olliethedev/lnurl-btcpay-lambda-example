@@ -91,19 +91,17 @@ app.get("/withdraw-lnurl/withdraw-info", new lnurlWithdrawMiddleware.info({
 app.get("/withdraw-lnurl/callback", lnurlWithdrawMiddleware.callback);
 
 // Misc
-app.get("/node/ping", async function(req, res) {
-  const response = await lnService.getWalletInfo({lnd});
-  console.log(response);
-  res.status(200).json({status:response.public_key});
+app.get("/node/ping", async function(req, res, next) {
+  let response;
+  try{
+    response = await lnService.getWalletInfo({lnd});
+    console.log(response);
+    res.status(200).json({status:response.public_key});
+  }catch(ex){
+    console.trace(ex);
+    res.status(500).json({error:ex.message});
+  }
+  next();
 })
-
-//todo: makesure mongodb disconnects after calls, see https://medium.com/fotontech/node-js-serverless-aws-lambda-function-how-to-cache-mongodb-connection-and-reuse-it-between-6ec2fea0f465
-// app.use( async function( req, res, next ) {
-//   console.log( "cleaning up.." );
-//   if(req.dbClient){
-//     await disconnect();
-//   }
-//   next();
-// } );
 
 module.exports.hello = serverless(app);
