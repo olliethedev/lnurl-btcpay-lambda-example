@@ -26,7 +26,7 @@ const claimSchema = new mongoose.Schema({
     },
     state: {
         type: String,
-        enum : [ "OPEN","CONFIRMED", "CANCELED" ],
+        enum : [ "OPEN","SETTLED", "CANCELED" ],
         default: "OPEN",
         required: true
     },
