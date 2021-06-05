@@ -1,6 +1,6 @@
 const lnurl = require("lnurl");
 const querystring = require("querystring");
-const { createInvoiceAndSyncDB, getLndInvoiceAndSyncDB } = require("../helpers/invoiceHelper");
+const { createInvoiceAndSyncDB } = require("../helpers/invoiceHelper");
 
 const invoiceMessage = "Fund your account";
 
@@ -70,19 +70,5 @@ module.exports.callback = async function(req, res){
             message: 'Funds added to your account'
          },
         disposable: true,
-    });
-}
-
-module.exports.invoice = async function(req, res){
-    const { invoiceId } = req.params;
-    if( !invoiceId ) {
-        throw new Error("Missing invoice id");
-    }
-    
-    const {invoice,account} = await getLndInvoiceAndSyncDB(invoiceId, req.models.account, req.models.invoice);
-    
-    res.status(200).json({
-        invoice,
-        account
     });
 }

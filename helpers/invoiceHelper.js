@@ -1,59 +1,23 @@
 const crypto = require("crypto");
-const lnService = require('ln-service');
-const lnd = require('../lnd');
 const { getConnection, connect } = require("./databaseHelper");
+const { getInvoice, createInvoice, parsePaymentRequest, pay } = require('./lndRequestHelper');
 
 module.exports.createInvoiceAndSyncDB = async function ( linkingPublicKey, amountInvoiced, description, responseMetadata, accountModel, invoiceModel){
     const description_hash = crypto.createHash("sha256").update(responseMetadata).digest();
     const account = await accountModel.findOne({ linkingPublicKey });
     console.log(account);
 
-    const lnInvoice = await lnService.createInvoice({
-        lnd,
-        tokens: amountInvoiced,
-        description,
-        description_hash,
-      });
+    const lnInvoice = await createInvoice(amountInvoiced, description, description_hash.toString('base64'));
     console.log(lnInvoice);
 
     const invoice = new invoiceModel({
-        invoiceId : lnInvoice.id,
-        invoiceRequest: lnInvoice.request,
+        invoiceId : Buffer.from(lnInvoice.r_hash, 'base64').toString('hex'), // consider refactoring to ignore this field
+        invoiceRequest: lnInvoice.payment_request,
         account,
         amountInvoiced
     });
     await invoice.save();
-    return lnInvoice.request;
-}
-
-module.exports.getLndInvoiceAndSyncDB = async function( invoiceId, accountModel, invoiceModel ){
-    const conn = getConnection();
-    const dbSession = await conn.startSession();
-
-    let invoice;
-    let account;
-
-    await dbSession.withTransaction(async () => {
-        invoice = await invoiceModel.findOne({invoiceId}).session(dbSession);
-        account = await accountModel.findById(invoice.account).session(dbSession);
-        if(invoice.state !== "SETTLED"){
-            const invoiceDetails = await lnService.getInvoice({id:invoiceId, lnd});
-            if(invoice.state === "OPEN" && invoiceDetails.is_confirmed){
-                invoice.state = "SETTLED";
-                invoice.amountReceived = invoiceDetails.received;
-                account.balance += invoiceDetails.received;
-                await invoice.save();
-                await account.save();
-            }else if(invoice.state === "OPEN" && invoiceDetails.is_canceled){
-                invoice.state = "CANCELED";
-                await invoice.save();
-            }
-        }
-    });
-
-    dbSession.endSession();
-
-    return { invoice, account};
+    return lnInvoice.payment_request;
 }
 
 module.exports.createPaymentClaimAndSyncDB = async function (linkingPublicKey, accountModel, claimModel) {
@@ -91,23 +55,28 @@ module.exports.payInvoiceAndSyncDB = async function( secret, pr, accountModel, c
     await dbSession.withTransaction(async () => {
         claim = await claimModel.findOne({secret}).session(dbSession);
         account = await accountModel.findById(claim.account).session(dbSession);
-        const requestDetails = lnService.parsePaymentRequest({request: pr});
-        if(requestDetails.safe_tokens > account.balance){
+        const requestDetails = await parsePaymentRequest(pr);
+        //note: getInvoice using the requestDetails.payment_hash will fail for some nodes, dont rely on it.
+        const amountRequested = parseInt(requestDetails.num_satoshis);
+        console.log(requestDetails);
+        if(amountRequested > account.balance){
             claim.state = "CANCELED";
             await claim.save();
             throw new Error("Not enough funds to fill invoice");
         }
-        const paymentResp = await lnService.pay({lnd, request:pr});
-        if(paymentResp.is_confirmed === true){
-            const amountRequested = paymentResp.tokens - paymentResp.fee; //eat the fee to avoid negative user balance
-            account.balance -= amountRequested;
+        const paymentResp = await pay(pr);
+        console.log(paymentResp);
+        if(!paymentResp.payment_error || paymentResp.payment_error===0){
+            account.balance -= amountRequested; //todo: take note of fees parseInt(paymentResp.payment_route.total_fees)
             await account.save();
             claim.invoiceRequest = pr;
-            claim.paymentId = paymentResp.id;
-            claim.state = "CONFIRMED";
+            // claim.paymentId = invoice.r_hash; //to string?
+            claim.state = "SETTLED";
             claim.amountRequested = amountRequested;
-            await claim.save();
+        }else{
+            claim.state = "CANCELED";
         }
+        await claim.save();
     });
     return {account, claim};
 }
@@ -124,13 +93,14 @@ module.exports.getAllLndInvoicesAndSyncDB = async function(account, invoiceModel
         for(let i = 0; i < invoices.length; i++){
             let invoice = invoices[i];
             if(invoice.state !== "SETTLED"){
-                const invoiceDetails = await lnService.getInvoice({id:invoice.invoiceId, lnd});
-                if(invoice.state === "OPEN" && invoiceDetails.is_confirmed){
+                const invoiceDetails = await getInvoice(invoice.invoiceId);
+                // console.log(invoiceDetails)
+                if(invoice.state === "OPEN" && invoiceDetails.state==="SETTLED"){
                     invoice.state = "SETTLED";
-                    invoice.amountReceived = invoiceDetails.received;
-                    account.balance += invoiceDetails.received;
+                    invoice.amountReceived = parseInt(invoiceDetails.value);
+                    account.balance += parseInt(invoiceDetails.value);
                     await invoice.save();
-                }else if(invoice.state === "OPEN" && invoiceDetails.is_canceled){
+                }else if(invoice.state === "OPEN" && invoiceDetails.state==="CANCELED"){
                     invoice.state = "CANCELED";
                     await invoice.save();
                 }
@@ -144,7 +114,6 @@ module.exports.getAllLndInvoicesAndSyncDB = async function(account, invoiceModel
 
     return invoices;
 }
-
 module.exports.getAllClaims = async function(account, claimModel){
     return claimModel.find({account}).sort({updatedAt:-1});
 }

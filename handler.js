@@ -1,8 +1,6 @@
 "use strict";
 const serverless = require('serverless-http');
 const express = require('express');
-const lnService = require('ln-service');
-const lnd = require('./lnd');
 const cors = require('cors');
 
 const {findAccountForSession} = require('./helpers/sessionHelper');
@@ -14,6 +12,7 @@ const lnurlPayMiddleware = require('./middleware/lnurlPayMiddleware');
 const lnurlWithdrawMiddleware = require('./middleware/lnurlWithdrawMiddleware');
 const { disconnect } = require('./helpers/databaseHelper');
 const { getAllLndInvoicesAndSyncDB, getAllClaims } = require('./helpers/invoiceHelper');
+const { getInfo } = require('./helpers/lndRequestHelper');
 
 const app = express()
 
@@ -53,6 +52,7 @@ app.get('/account', async function (req, res, next) {
     });
 
   }catch(ex){
+    console.trace(ex);
     res.status(200).json({ loggedin: false });
   }
   next();
@@ -77,8 +77,6 @@ app.get("/pay-lnurl/pay-info/:linkingPublicKey", new lnurlPayMiddleware.info({
 
 app.get("/pay-lnurl/callback/:linkingPublicKey", lnurlPayMiddleware.callback);
 
-app.get("/node/invoice/:invoiceId", lnurlPayMiddleware.invoice);
-
 // Withdraw
 app.get("/withdraw-lnurl/withdraw", new lnurlWithdrawMiddleware.withdrawUrl({
   callbackUrl: `${process.env.PUBLIC_URL}/withdraw-lnurl/withdraw-info`,
@@ -92,15 +90,16 @@ app.get("/withdraw-lnurl/callback", lnurlWithdrawMiddleware.callback);
 
 // Misc
 app.get("/node/ping", async function(req, res, next) {
-  let response;
   try{
-    response = await lnService.getWalletInfo({lnd});
+    const response = await getInfo();
+  
     console.log(response);
-    res.status(200).json({status:response.public_key});
-  }catch(ex){
-    console.trace(ex);
-    res.status(500).json({error:ex.message});
+    res.status(200).json({status:response.identity_pubkey});
+  }catch(e){
+    console.trace(e);
+    res.status(500).json({error:"Failed getting info"});
   }
+  
   next();
 })
 
