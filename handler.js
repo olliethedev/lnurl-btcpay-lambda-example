@@ -17,7 +17,7 @@ const { getInfo } = require('./helpers/lndRequestHelper');
 const app = express()
 
 const corsOptions = {
-  origin: ["http://localhost:3001", "http://localhost:3000", "https://c060b3731238.ngrok.io"],
+  origin: ["http://localhost:3001", "http://localhost:3000", "https://c060b3731238.ngrok.io", process.env.FRONT_END_URL],
   credentials: true
 };
 

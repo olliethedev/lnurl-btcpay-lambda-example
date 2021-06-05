@@ -27,6 +27,7 @@ jobs:
         echo "LND_MACAROON=${{ secrets.LND_MACAROON }}" >> .env
         echo "LND_MACAROON_HEX=${{ secrets.LND_MACAROON_HEX }}" >> .env
         echo "LND_REST_URL=${{ secrets.LND_REST_URL }}" >> .env
+        echo "FRONT_END_URL=${{ secrets.FRONT_END_URL }}" >> .env
         cat .env
     - run: npm ci
     - name: serverless deploy
