@@ -24,6 +24,9 @@ jobs:
         echo "MONGO_DB_URL=${{ secrets.MONGO_DB_URL }}" >> .env
         echo "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" >> .env
         echo "PUBLIC_URL=${{ secrets.PUBLIC_URL }}" >> .env
+        echo "LND_MACAROON=${{ secrets.LND_MACAROON }}" >> .env
+        echo "LND_MACAROON_HEX=${{ secrets.LND_MACAROON_HEX }}" >> .env
+        echo "LND_REST_URL=${{ secrets.LND_REST_URL }}" >> .env
         cat .env
     - run: npm ci
     - name: serverless deploy
