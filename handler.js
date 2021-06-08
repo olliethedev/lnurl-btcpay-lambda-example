@@ -25,6 +25,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(mongoMiddleware);
 app.use(sessionMiddleware);
+// to force express to recognize connection as HTTPS and receive cookie with 'secure' set
+app.set('trust proxy', 1);
 
 
 // Authentication

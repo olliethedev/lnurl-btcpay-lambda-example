@@ -7,6 +7,7 @@ module.exports = function sessionMiddleware(req, res, next) {
     saveUninitialized: false,
     resave: false,
     cookie: {
+      httpOnly: true,
       secure: true,
       sameSite: 'none',
     },
