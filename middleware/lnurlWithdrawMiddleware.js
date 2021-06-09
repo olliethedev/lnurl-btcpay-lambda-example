@@ -56,7 +56,7 @@ module.exports.info = function(options){
 module.exports.callback = async function(req, res){
     console.log(req.query);
     const {k1, pr} = req.query;
-    const { account, claim } = await payInvoiceAndSyncDB(k1, pr, req.models.account, req.models.claim); // todo: check if this call is too slow for AWS lambda. consider breaking up like the funding flow
+    const { account, claim } = await payInvoiceAndSyncDB(k1, pr, req.models.account, req.models.claim);
     console.log({account, claim});
     res.status(200).json({status: "OK"});
 }

@@ -78,6 +78,11 @@ module.exports.payInvoiceAndSyncDB = async function( secret, pr, accountModel, c
         }
         await claim.save();
     });
+
+    //todo: handle failure inside transaction block
+
+    await conn.endSession();
+
     return {account, claim};
 }
 
@@ -109,6 +114,8 @@ module.exports.getAllLndInvoicesAndSyncDB = async function(account, invoiceModel
 
         await account.save();
     });
+
+    //todo: handle failure inside transaction block
 
     dbSession.endSession();
 

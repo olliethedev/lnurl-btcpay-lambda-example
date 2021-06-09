@@ -35,6 +35,10 @@ module.exports.pay = async function(payRequest) {
     return makeCall("POST", "/v1/channels/transactions", {payment_request: payRequest});
 }
 
+module.exports.payAsync = async function(payRequest, timeoutSeconds=60) {
+    return makeCall("POST", "/v2/router/send", {payment_request: payRequest, timeout_seconds: timeoutSeconds});
+}
+
 async function makeCall(method, path, body){
     const fetchOptions = {
         ...requestOptions, 
@@ -45,7 +49,10 @@ async function makeCall(method, path, body){
     // console.log({url, fetchOptions});
     try{
         const responseRaw = await fetch(url, fetchOptions);
-        return responseRaw.json();
+        // console.log(responseRaw);
+        const response = await responseRaw.json();
+        // console.log(response);
+        return response;
     }catch(err){
         console.error(err);
         throw new Error("REST API error");
