@@ -3,7 +3,17 @@ service: lnurl-btcpay-lambda-example
 frameworkVersion: '2'
 useDotenv: true
 
+custom:
+  serverless-offline-sqs:
+    autoCreate: true
+    endpoint: http://localhost:9324
+    region: us-east-1
+    accessKeyId: root
+    secretAccessKey: root
+    skipCacheInvalidation: false
+
 plugins:
+  - serverless-offline-sqs
   - serverless-offline
   - serverless-dotenv-plugin
 
@@ -14,6 +24,15 @@ provider:
   environment:
     MONGO_DB_URL: ${env:MONGO_DB_URL}
     SESSION_SECRET: ${env:SESSION_SECRET}
+    QUEUE_URL_OFFLINE: http://localhost:9324/queue/testReceiverQueue
+    QUEUE_URL:
+        Ref: testReceiverQueue
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sqs:SendMessage
+      Resource:
+        - Fn::GetAtt: [ testReceiverQueue, Arn ]
 
 functions:
   hello:
@@ -21,4 +40,18 @@ functions:
     events:
       - http: ANY /
       - http: 'ANY {proxy+}'
+  receiver:
+    handler: sqshandler.sqshandler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - testReceiverQueue
+              - Arn
+resources:
+  Resources:
+    testReceiverQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "testReceiverQueue"
 

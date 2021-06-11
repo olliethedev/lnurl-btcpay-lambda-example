@@ -4,6 +4,7 @@
   "description": "",
   "main": "handler.js",
   "scripts": {
+    "dev": "serverless offline --useChildProcesses",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -18,9 +19,11 @@
   },
   "homepage": "https://github.com/olliethedev/lnurl-btcpay-lambda-example#readme",
   "devDependencies": {
+    "aws-sdk": "^2.926.0",
     "serverless": "^2.43.0",
     "serverless-dotenv-plugin": "^3.9.0",
-    "serverless-offline": "^7.0.0"
+    "serverless-offline": "7.0.0",
+    "serverless-offline-sqs": "4.1.1"
   },
   "dependencies": {
     "connect-mongo": "^4.4.1",
